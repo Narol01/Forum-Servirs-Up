@@ -46,14 +46,11 @@ final UserAccountRepository userAccountRepository;
     }
 
     private boolean checkEndpoint(String method, String servletPath) {
-        if ((method.equals("POST") &&
+        return !((method.equals("POST") &&
                 (servletPath.equals("/account/register") ||
-                checkStartsWithForumPosts(servletPath)))||
-           (method.equals("GET") && checkStartsWithForumPosts(servletPath))){
-            return false;
-        }else {
-            return true;
-        }
+                checkStartsWithForumPosts(servletPath))) ||
+            (method.equals("GET") && checkStartsWithForumPosts(servletPath)));
+
     }
     private boolean checkStartsWithForumPosts(String servletPath) {
         return servletPath.startsWith("/forum/posts/");

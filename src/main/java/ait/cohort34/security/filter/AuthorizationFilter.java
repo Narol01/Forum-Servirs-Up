@@ -1,5 +1,6 @@
 package ait.cohort34.security.filter;
 
+import ait.cohort34.accounting.dao.UserAccountRepository;
 import ait.cohort34.accounting.model.Role;
 import ait.cohort34.accounting.model.UserAccount;
 import ait.cohort34.accounting.service.UserAccountService;
@@ -19,6 +20,8 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuthorizationFilter implements Filter {
     final UserAccountService userAccountService;
+    private final UserAccountRepository userAccountRepository;
+
     @Override
     public void doFilter(ServletRequest req, ServletResponse resp, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) req;
@@ -35,6 +38,8 @@ public class AuthorizationFilter implements Filter {
             else {
                 filterChain.doFilter(request,response);
             }
+        } else{
+                response.setStatus(401);
         }
         filterChain.doFilter(request,response);
     }
@@ -48,7 +53,7 @@ public class AuthorizationFilter implements Filter {
     private UserAccount getCurrentUser(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null) {
-            return (UserAccount) session.getAttribute("currentUser");
+            return (UserAccount) session.getAttribute("user");
         }
         return null;
     }
