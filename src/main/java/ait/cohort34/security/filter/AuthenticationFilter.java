@@ -2,8 +2,11 @@ package ait.cohort34.security.filter;
 
 import ait.cohort34.accounting.dao.UserAccountRepository;
 import ait.cohort34.accounting.dto.exceptions.UserNotFoundException;
+import ait.cohort34.accounting.model.Role;
 import ait.cohort34.accounting.model.UserAccount;
+import ait.cohort34.security.model.User;
 import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.Base64;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -36,7 +42,10 @@ final UserAccountRepository userAccountRepository;
                 if (!BCrypt.checkpw(credentials[1], userAccount.getPassword())) {
                     throw new RuntimeException();
                 }
-                request = new WrappedRequest(request, userAccount.getLogin());
+                Set<String> roles = userAccount.getRoles().stream()
+                        .map(Role::name)
+                        .collect(Collectors.toSet());
+                request = new WrappedRequest(request, userAccount.getLogin(),roles);
             }catch (Exception e){
                 response.setStatus(401);
                 return;
@@ -63,15 +72,16 @@ final UserAccountRepository userAccountRepository;
     }
     private static class WrappedRequest extends HttpServletRequestWrapper {
         private final String login;
-
-        public WrappedRequest(HttpServletRequest request, String login) {
+        private final Set<String> roles;
+        public WrappedRequest(HttpServletRequest request, String login,Set<String> roles) {
             super(request);
             this.login = login;
+            this.roles = roles;
         }
 
         @Override
         public Principal getUserPrincipal() {
-            return () -> login;
+            return new User(login,roles);
         }
     }
 }
